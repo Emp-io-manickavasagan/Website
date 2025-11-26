@@ -1,0 +1,21 @@
+About Empio
+
+Empio is a young and fast-growing SaaS company focused on creating simple, powerful, and accessible digital products. We build tools that help individuals and businesses work smarter, communicate better, and understand their users more deeply.
+
+Founded with a clear vision of turning ideas into practical tools, Empio focuses on solving real problems with clean design, strong engineering, and a user-first mindset.
+
+About the Founder
+
+Empio is built and led by S. Manickavasagan, a solo founder with a passion for creating digital products from scratch. Starting young and driven by curiosity, he believes that great products can be built by small, focused teams—or even by one person with the right vision and determination.
+
+His journey is based on learning fast, building consistently, and launching products that truly help users. Empio reflects that mindset: simple, effective, and built with purpose.
+
+Our Mission
+
+To empower creators, developers, and teams with smart tools that make everyday digital tasks faster, easier, and more meaningful.
+
+Our Products
+
+ColdRm – A tool designed to simplify cold email outreach and improve response rates. Built for makers, founders, and teams launching new ideas.
+
+Emofy (Upcoming) – An AI-driven emotion-detection API that understands user emotions based on typing behavior, scrolling activity, and text sentiment. Developers can use this to build smarter chat apps, messaging platforms, and digital experience tools.

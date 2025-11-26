@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Emp io — SaaS Builder</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Poppins for nav -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            accent: '#7dd3fc', // soft cyan
+            muted: '#94a3b8'
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui']
+          }
+        }
+      }
+    }
+  </script>
+
+  <meta name="description" content="Emp io — Young founder building useful SaaS products for global users." />
+  <!-- Font Awesome for product + social icons (no integrity to avoid blocking) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    /* small utilities */
+    .glass {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(6px);
+    }
+    /* Nav styling: use Poppins, stronger hover with gradient + underline */
+    .nav-font { font-family: 'Poppins', Inter, ui-sans-serif, system-ui, sans-serif; }
+    .nav-font a { position: relative; display: inline-block; padding: 6px 10px; border-radius: 8px; font-weight: 600; letter-spacing: .2px; transition: all .22s ease; color: inherit; }
+    .nav-font a:hover { color: #022; background: linear-gradient(90deg,#7dd3fc,#60a5fa); transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 26px rgba(125,211,252,0.08); }
+    .nav-font a::after { content: ''; position: absolute; left: 50%; transform: translateX(-50%); bottom: -6px; width: 0; height: 2px; background: linear-gradient(90deg,#7dd3fc,#60a5fa); transition: width .25s ease; border-radius:2px; }
+    .nav-font a:hover::after { width: 56%; }
+    /* Mobile nav links slightly larger for tap targets */
+    .mobile-nav-link { padding: 10px 12px; font-weight:600; }
+
+    /* ensure dark theme stays dark */
+    body { background-color: #000 !important; color: #e5e7eb; }
+
+    /* profile image sizing and smooth zoom */
+    .profile-img {
+      will-change: transform;
+      transform: scale(1.02); /* slight base zoom */
+      transition: transform 420ms cubic-bezier(.2,.9,.3,1);
+    }
+    .profile-img:hover {
+      transform: scale(1.18); /* hover zoom */
+    }
+
+    /* animation utilities */
+    .anim-section { opacity: 0; transform: translateY(18px) scale(0.995); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.9,.3,1); }
+    .anim-section.in-view { opacity: 1; transform: translateY(0) scale(1); }
+    .nav-link { opacity: 0; transform: translateY(-6px); transition: opacity .45s ease, transform .45s cubic-bezier(.2,.9,.3,1); }
+    .nav-link.in-view { opacity: 1; transform: translateY(0); }
+    .glass.in-view { transform: translateY(0) scale(1); opacity: 1; transition: transform .6s cubic-bezier(.2,.9,.3,1), opacity .6s ease; }
+    .glass { transform: translateY(8px) scale(.995); opacity: .95; }
+    .icon-pulse { transition: transform 400ms ease; }
+    .icon-pulse:hover { transform: scale(1.12); }
+    /* small stagger helper for JS */
+    .stagger-child { opacity: 0; transform: translateY(8px); transition: opacity .45s ease, transform .45s cubic-bezier(.2,.9,.3,1); }
+    .stagger-child.in-view { opacity: 1; transform: translateY(0); }
+
+    /* Preloader styles */
+    #preloader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      z-index: 9999;
+    }
+    #preloader .preloader-inner { text-align: center; max-width: 420px; width: 85%; padding: 12px; }
+    /* animated, rounded logo */
+    #preloader img {
+      width: 76px;
+      height: 76px;
+      object-fit: cover;
+      margin: 0 auto 14px;
+      display: block;
+      border-radius: 999px;
+      padding: 8px;
+      background: rgba(255,255,255,0.03);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 4px 14px rgba(125,211,252,0.04);
+      animation: logo-bounce 1200ms ease-in-out infinite;
+    }
+    @keyframes logo-bounce { 0%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.06)}100%{transform:translateY(0) scale(1)} }
+    /* subtitle dots */
+    #preloader .sub { color:#9ca3af; margin-top:8px; font-size:.95rem; display:flex; justify-content:center; gap:6px; align-items:center }
+    #preloader .dots { display:inline-block; width:36px; text-align:left; }
+    @keyframes dots { 0%{content:"."}33%{content:".."}66%{content:"..."}100%{content:"."} }
+    .dots::after { content: ""; display:inline-block; animation:dots 1200ms steps(3, end) infinite; }
+    #preloader .bar-bg { background: rgba(255,255,255,0.04); border-radius: 999px; height: 10px; overflow: hidden; }
+    #preloader .bar-fill { height: 100%; width: 0%; background: #7dd3fc; transition: width 220ms linear; transform-origin: left center; }
+    #preloader .percent { margin-top: 10px; color: #d1d5db; font-size: .95rem; }
+    /* fade-out helper */
+    #preloader.fade-out { opacity: 0; transition: opacity .6s ease; pointer-events: none; }
+
+    /* Interactive background canvas */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 5; /* behind header/content but above page background */
+      pointer-events: none;
+      opacity: 0.06;
+      transform-origin: center;
+    }
+
+    /* Cursor glow */
+    #cursor-glow {
+      position: fixed;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      transform: translate(-50%, -50%) scale(0.8);
+      transition: transform .12s linear, opacity .25s ease;
+      background: radial-gradient(circle at center, rgba(125,211,252,0.32) 0%, rgba(125,211,252,0.06) 40%, transparent 60%);
+      z-index: 9998;
+      opacity: 0;
+    }
+
+    /* Card tilt helpers */
+    .glass.tilt { transition: transform .18s ease, box-shadow .18s ease; will-change: transform; transform-style: preserve-3d; }
+    .glass.tilt:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.45); }
+  </style>
+  <link rel="icon" href="assets/logo.png" type="image/png">
+</head>
+<body class="bg-black text-gray-100 antialiased leading-relaxed">
+
+  <!-- Preloader (logo above progress bar) -->
+  <div id="preloader" aria-hidden="false" role="status">
+    <div class="preloader-inner">
+      <img src="assets/logo.png" alt="Emp io logo" onerror="this.onerror=null;this.src='assets/logo.svg'"/>
+      <div class="sub">
+        <div>Initializing</div><div class="dots" aria-hidden="true"></div>
+      </div>
+      <div class="bar-bg">
+        <div id="preloader-bar" class="bar-fill" style="width:0%"></div>
+      </div>
+      <div id="preloader-text" class="percent">Loading 0%</div>
+    </div>
+  </div>
+
+  <!-- interactive background and cursor -->
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div id="cursor-glow" aria-hidden="true"></div>
+
+  <!-- NAV -->
+  <header class="sticky top-0 z-40 bg-black/60 backdrop-blur glass border-b border-white/5">
+    <div class="max-w-5xl mx-auto px-4 md:px-6 flex items-center justify-between h-16">
+      <a href="#home" class="flex items-center gap-3">
+        <!-- use PNG logo (fallback to SVG if PNG fails) -->
+        <img src="assets/logo.png" alt="Emp io logo" class="w-10 h-10 rounded-md object-cover" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/logo.svg'"/>
+        <span class="font-semibold tracking-wide">Emp io</span>
+        <span class="sr-only">Emp io — Home</span>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-6 text-sm nav-font">
+        <a href="#home" class="hover:text-accent transition">Home</a>
+        <a href="#about" class="hover:text-accent transition">About</a>
+        <a href="#products" class="hover:text-accent transition">Products</a>
+        <a href="#connect" class="hover:text-accent transition">Connect</a>
+      </nav>
+
+      <!-- mobile menu button -->
+      <button id="menuBtn" class="md:hidden p-2 rounded-md hover:bg-white/5 transition">
+        <svg id="menuOpen" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg id="menuClose" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- mobile nav -->
+    <div id="mobileNav" class="md:hidden hidden border-t border-white/5 nav-font">
+      <div class="px-4 py-4 flex flex-col gap-3">
+        <a href="#home" class="mobile-nav-link rounded hover:bg-white/3">Home</a>
+        <a href="#about" class="mobile-nav-link rounded hover:bg-white/3">About</a>
+        <a href="#products" class="mobile-nav-link rounded hover:bg-white/3">Products</a>
+        <a href="#connect" class="mobile-nav-link rounded hover:bg-white/3">Connect</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 md:px-6 py-10">
+
+    <!-- HERO / HOME -->
+    <section id="home" class="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-start py-8 anim-section">
+      <div class="space-y-6">
+        <div class="inline-flex items-center gap-4">
+          <!-- use PNG profile and add lazy load + fallback -->
+          <img src="assets/profile.png" alt="S. Manickavasagan" class="w-28 h-28 md:w-32 md:h-32 rounded-full object-cover ring-2 ring-white/10 profile-img" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/profile.jpg'"/>
+          <div>
+            <div class="text-sm text-muted">Founder</div>
+            <div class="text-xl font-semibold">S. Manickavasagan</div>
+            <div class="text-xs text-muted mt-1">Founder & SaaS Builder</div>
+          </div>
+        </div>
+
+        <h1 class="text-3xl md:text-4xl font-bold leading-tight">
+          Emp io — Useful SaaS products for global users
+        </h1>
+
+        <p class="text-gray-300 max-w-xl">
+          Young founder building simple, reliable SaaS tools for creators and founders. Focused on clarity, performance, and practical value.
+        </p>
+
+        <div class="flex flex-wrap gap-3">
+          <a href="#products" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-accent/10 text-accent border border-accent/10 hover:bg-accent/20 transition">
+            View Products
+          </a>
+          <a href="#connect" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-white/5 hover:bg-white/10 transition text-sm">
+            Connect With Us
+          </a>
+        </div>
+
+        <div class="mt-6 text-sm text-muted">
+          Minimal · Modern · Practical
+        </div>
+      </div>
+
+      <div class="order-first md:order-last flex justify-center md:justify-end">
+        <div class="w-full max-w-sm">
+          <div class="glass p-5 rounded-2xl shadow-md border border-white/5">
+            <div class="flex items-center gap-4">
+              <!-- use PNG profile and add lazy load + fallback -->
+              <img src="assets/profile.png" alt="Founder" class="w-36 h-36 md:w-40 md:h-40 rounded-lg object-cover profile-img" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='assets/profile.jpg'"/>
+              <div>
+                <div class="font-semibold">S. Manickavasagan</div>
+                <div class="text-xs text-muted">Founder & SaaS Builder</div>
+              </div>
+            </div>
+
+            <p class="text-gray-300 mt-4 text-sm">
+              Young founder building useful SaaS products for global users.
+            </p>
+
+            <div class="mt-4 flex gap-3">
+              <a href="#products" class="text-sm px-3 py-2 rounded-md bg-white/5 hover:bg-white/10">Our Products</a>
+              <a href="#connect" class="text-sm px-3 py-2 rounded-md bg-white/5 hover:bg-white/10">Connect</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="pt-12 pb-12 anim-section">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl font-semibold">About Empio</h2>
+        <p class="text-sm text-gray-300 mt-4">
+          Empio is a young and fast-growing SaaS company focused on creating simple, powerful, and accessible digital products. We build tools that help individuals and businesses work smarter, communicate better, and understand their users more deeply.
+        </p>
+
+        <p class="text-sm text-gray-300 mt-3">
+          Founded with a clear vision of turning ideas into practical tools, Empio focuses on solving real problems with clean design, strong engineering, and a user-first mindset.
+        </p>
+
+        <h3 class="mt-6 text-lg font-semibold">About the Founder</h3>
+        <p class="text-sm text-gray-300 mt-3">
+          Empio is built and led by S. Manickavasagan, a solo founder with a passion for creating digital products from scratch. Starting young and driven by curiosity, he believes that great products can be built by small, focused teams—or even by one person with the right vision and determination.
+        </p>
+
+        <h3 class="mt-6 text-lg font-semibold">Our Mission</h3>
+        <p class="text-sm text-gray-300 mt-3">
+          To empower creators, developers, and teams with smart tools that make everyday digital tasks faster, easier, and more meaningful.
+        </p>
+
+        <h3 class="mt-6 text-lg font-semibold">Our Products</h3>
+        <ul class="text-sm text-gray-400 mt-3 space-y-2">
+          <li><strong>ColdRm</strong> – A tool designed to simplify cold email outreach and improve response rates. Built for makers, founders, and teams launching new ideas.</li>
+          <li><strong>Emofy (Upcoming)</strong> – An AI-driven emotion-detection API that understands user emotions based on typing behavior, scrolling activity, and text sentiment. Developers can use this to build smarter chat apps and experience tools.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section id="products" class="pt-12 pb-20 anim-section">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-semibold">Our Products</h2>
+        <div class="text-sm text-muted">Built with clarity & speed</div>      
+      </div>
+
+      <div class="mt-6 grid gap-6 grid-cols-1 md:grid-cols-2">
+        <!-- Product 1 -->
+        <article class="glass p-6 rounded-xl border border-white/5 shadow-sm hover:scale-[1.01] transition">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-envelope text-accent text-lg mt-1" aria-hidden="true"></i>
+                <h3 class="text-lg font-semibold">Coldrm (MVP)</h3>
+              </div>
+              <p class="text-sm text-gray-300 mt-3 max-w-xl">
+                A smart cold outreach automation tool for creators and founders. Streamline outreach, follow-ups, and analytics to convert leads faster.
+              </p>
+            </div>
+
+            <div class="text-right">
+              <div class="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs bg-green-600/20 text-green-300 border border-green-300/10">Launched</div>
+              <div class="mt-4">
+                <a href="https://www.coldrm.space" class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-accent text-black font-medium hover:opacity-90">Visit</a>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Product 2 -->
+        <article class="glass p-6 rounded-xl border border-white/5 shadow-sm hover:scale-[1.01] transition">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-face-smile text-pink-400 text-lg mt-1" aria-hidden="true"></i>
+                <h3 class="text-lg font-semibold">Emofy</h3>
+              </div>
+              <p class="text-sm text-gray-300 mt-3 max-w-xl">
+                Emofy is an AI system that detects user emotions based on web activity such as typing & scrolling behavior and text sentiment. It returns emotion as an API output.
+              </p>
+
+              <ul class="text-sm text-gray-400 mt-3 space-y-2">
+                <li>• Chat apps showing user mood in real time</li>
+                <li>• Mental wellness apps</li>
+                <li>• Customer support dashboards</li>
+                <li>• Personal productivity tools</li>
+              </ul>
+            </div>
+
+            <div class="text-right">
+              <div class="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs bg-yellow-600/15 text-yellow-300 border border-yellow-300/10">Upcoming</div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- CONNECT / SOCIAL -->
+    <section id="connect" class="pt-6 pb-20 anim-section">
+      <h2 class="text-2xl font-semibold">Connect With Us</h2>
+      <p class="text-gray-400 mt-2 max-w-xl">Follow and reach out on social platforms.</p>
+
+      <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <!-- Instagram -->
+        <a href="https://www.instagram.com/mr_emp_26/" target="_blank" rel="noopener" class="glass p-4 rounded-lg flex flex-col items-center gap-3 hover:scale-105 transition">
+          <i class="fa-brands fa-instagram text-accent text-2xl" aria-hidden="true"></i>
+          <div class="text-sm">Instagram</div>
+        </a>
+
+        <!-- X / Twitter -->
+        <a href="https://x.com/Manickavasagan_" target="_blank" rel="noopener" class="glass p-4 rounded-lg flex flex-col items-center gap-3 hover:scale-105 transition">
+          <i class="fa-brands fa-twitter text-accent text-2xl" aria-hidden="true"></i>
+          <div class="text-sm">X</div>
+        </a>
+
+        <!-- CofounderLab (generic icon) -->
+        <a href="https://cofounderslab.com/profile/manickavasagan-s-3cw9o0" target="_blank" rel="noopener" class="glass p-4 rounded-lg flex flex-col items-center gap-3 hover:scale-105 transition">
+          <i class="fa-solid fa-users text-accent text-2xl" aria-hidden="true"></i>
+          <div class="text-sm">CofounderLab</div>
+        </a>
+
+        <!-- Product Hunt -->
+        <a href="https://www.producthunt.com/@manickavasagan" target="_blank" rel="noopener" class="glass p-4 rounded-lg flex flex-col items-center gap-3 hover:scale-105 transition">
+          <i class="fa-brands fa-product-hunt text-accent text-2xl" aria-hidden="true"></i>
+          <div class="text-sm">Product Hunt</div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-8 border-t border-white/5 text-center text-xs text-muted">
+      © <span id="year"></span> Emp io — Built by S. Manickavasagan
+    </footer>
+  <script src="script.js"></script>
+
+  <script>
+    // animation controller - exposed as function so we start it only after preloader finished
+    function initAnimations() {
+      // guard to avoid double-run
+      if (window.__empio_animations_started) return;
+      window.__empio_animations_started = true;
+
+      // stagger nav links
+      const navLinks = document.querySelectorAll('nav a');
+      navLinks.forEach((el, i) => {
+        el.classList.add('nav-link');
+        setTimeout(() => el.classList.add('in-view'), 80 * i + 150);
+      });
+
+      // staggered children inside hero (small reveal)
+      document.querySelectorAll('#home .stagger-child').forEach((el, i) => {
+        setTimeout(() => el.classList.add('in-view'), 160 + i * 90);
+      });
+
+      // Intersection observer for sections & glass cards
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('in-view');
+          // if there are stagger-child elements inside, animate them
+          const children = entry.target.querySelectorAll('.stagger-child');
+          if (children.length) {
+            children.forEach((c, idx) => setTimeout(() => c.classList.add('in-view'), idx * 80));
+          }
+          obs.unobserve(entry.target);
+        });
+      }, { threshold: 0.12 });
+
+      document.querySelectorAll('.anim-section, .glass').forEach(el => obs.observe(el));
+
+      // add pulse/hover class to social icons
+      document.querySelectorAll('.fa-brands, .fa-solid').forEach(i => i.classList.add('icon-pulse'));
+    }
+
+    // Start animations after preloader done, or start immediately if no preloader exists
+    if (!document.getElementById('preloader')) {
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAnimations);
+      else initAnimations();
+    } else {
+      window.addEventListener('preloader:done', () => {
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAnimations);
+        else initAnimations();
+      }, { once: true });
+    }
+  </script>
+
+  <script>
+    // Preloader: fixed 5000ms duration with smooth easeOut progress
+    (function () {
+      const preloader = document.getElementById('preloader');
+      const bar = document.getElementById('preloader-bar');
+      const text = document.getElementById('preloader-text');
+      if (!preloader || !bar || !text) return;
+
+      const total = 5000; // fixed 5 seconds
+      const start = performance.now();
+      function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+      function step(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / total, 1);
+        const eased = easeOutCubic(progress);
+        const pct = Math.floor(eased * 100);
+        bar.style.width = pct + '%';
+        text.textContent = 'Loading ' + pct + '%';
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          bar.style.width = '100%';
+          text.textContent = 'Loading 100%';
+          setTimeout(() => {
+            preloader.classList.add('fade-out');
+            preloader.setAttribute('aria-hidden', 'true');
+            preloader.addEventListener('transitionend', () => {
+              if (preloader && preloader.parentNode) preloader.parentNode.removeChild(preloader);
+              window.dispatchEvent(new Event('preloader:done'));
+            }, { once: true });
+          }, 300);
+        }
+      }
+      requestAnimationFrame(step);
+    })();
+  </script>
+
+  <script>
+    // Interactive scripts: canvas particles, cursor-follow glow, card tilt & hero parallax
+    (function () {
+      // Canvas particles
+      const canvas = document.getElementById('bg-canvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let w = canvas.width = innerWidth;
+        let h = canvas.height = innerHeight;
+        const particles = [];
+        const COUNT = Math.round((w * h) / 90000); // density
+        for (let i = 0; i < Math.max(20, COUNT); i++) {
+          particles.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            r: 0.8 + Math.random() * 1.6,
+            vx: (Math.random() - 0.5) * 0.2,
+            vy: (Math.random() - 0.5) * 0.2,
+            alpha: 0.12 + Math.random() * 0.12
+          });
+        }
+        function resize() { w = canvas.width = innerWidth; h = canvas.height = innerHeight; }
+        addEventListener('resize', resize);
+        let last = performance.now();
+        function draw(now) {
+          const dt = Math.min(60, now - last);
+          last = now;
+          ctx.clearRect(0, 0, w, h);
+          particles.forEach(p => {
+            p.x += p.vx * dt * 0.06;
+            p.y += p.vy * dt * 0.06;
+            if (p.x < -20) p.x = w + 20;
+            if (p.x > w + 20) p.x = -20;
+            if (p.y < -20) p.y = h + 20;
+            if (p.y > h + 20) p.y = -20;
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(125,211,252,' + p.alpha + ')';
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      }
+
+      // Cursor glow
+      const glow = document.getElementById('cursor-glow');
+      let glowVisible = false;
+      document.addEventListener('mousemove', (e) => {
+        if (!glow) return;
+        glow.style.left = e.clientX + 'px';
+        glow.style.top = e.clientY + 'px';
+        if (!glowVisible) { glowVisible = true; glow.style.opacity = '1'; }
+        // hide after short idle
+        clearTimeout(glow._t);
+        glow._t = setTimeout(() => { glow.style.opacity = '0'; glowVisible = false; }, 1200);
+      });
+
+      // Parallax on hero: subtle translate based on mouse position
+      const hero = document.getElementById('home');
+      if (hero) {
+        hero.addEventListener('mousemove', (ev) => {
+          const rect = hero.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const dx = (ev.clientX - cx) / rect.width;
+          const dy = (ev.clientY - cy) / rect.height;
+          hero.style.transform = `translate3d(${dx * 6}px, ${dy * 6}px, 0)`;
+        });
+        hero.addEventListener('mouseleave', () => { hero.style.transform = ''; });
+      }
+
+      // Tilt for glass cards
+      const tiltTargets = document.querySelectorAll('.glass');
+      tiltTargets.forEach(el => {
+        el.classList.add('tilt');
+        el.addEventListener('mousemove', (e) => {
+          const r = el.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width;
+          const py = (e.clientY - r.top) / r.height;
+          const rx = (py - 0.5) * -8; // rotateX
+          const ry = (px - 0.5) * 12; // rotateY
+          el.style.transform = `perspective(700px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(8px)`;
+        });
+        el.addEventListener('mouseleave', () => {
+          el.style.transform = '';
+        });
+      });
+
+      // Stop heavy interactions if user has reduced motion preference
+      const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (mq.matches) {
+        if (canvas) canvas.style.display = 'none';
+        if (glow) glow.style.display = 'none';
+        tiltTargets.forEach(el => el.classList.remove('tilt'));
+      }
+    })();
+  </script>
+</body>
+</html>
